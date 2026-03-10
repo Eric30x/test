@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生成绩管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+        h1 { color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #4a90e2; }
+        .form-section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        input:focus { outline: none; border-color: #4a90e2; }
+        button { background: #4a90e2; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.3s; }
+        button:hover { background: #357abd; }
+        button.delete-btn { background: #e74c3c; }
+        button.delete-btn:hover { background: #c0392b; }
+        button.cancel-btn { background: #95a5a6; }
+        button.cancel-btn:hover { background: #7f8c8d; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #4a90e2; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f5f8ff; }
+        .action-btns { display: flex; gap: 5px; }
+        .action-btns button { padding: 6px 12px; font-size: 12px; }
+        .error { color: #e74c3c; font-size: 14px; margin-top: 5px; }
+        .success { color: #27ae60; font-size: 14px; margin-top: 5px; }
+        .stats { background: #4a90e2; color: white; padding: 15px; border-radius: 8px; margin-top: 20px; display: flex; gap: 30px; }
+        .stats-item { text-align: center; flex: 1; }
+        .stats-value { font-size: 24px; font-weight: bold; }
+        .stats-label { font-size: 14px; opacity: 0.9; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 学生成绩管理系统</h1>
+        
+        <!-- 提示信息 -->
+        <div id="message" class="error" style="margin-bottom: 15px;"></div>
+        
+        <!-- 表单区域 -->
+        <div class="form-section">
+            <h3 id="formTitle">📝 添加新学生</h3>
+            <form id="studentForm">
+                <input type="hidden" id="studentId" value="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id">学号 *</label>
+                        <input type="text" id="id" required placeholder="例如: 2024001">
+                    </div>
+                    <div class="form-group">
+                        <label for="name">姓名 *</label>
+                        <input type="text" id="name" required placeholder="例如: 张三">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="score1">数学成绩</label>
+                        <input type="number" id="score1" min="0" max="100" step="0.1" placeholder="0-100">
+                    </div>
+                    <div class="form-group">
+                        <label for="score2">英语成绩</label>
+                        <input type="number" id="score2" min="0" max="100" step="0.1" placeholder="0-100">
+                    </div>
+                    <div class="form-group">
+                        <label for="score3">C++成绩</label>
+                        <input type="number" id="score3" min="0" max="100" step="0.1" placeholder="0-100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button type="submit" id="submitBtn">➕ 添加学生</button>
+                    <button type="button" class="cancel-btn hidden" id="cancelEditBtn">✖️ 取消编辑</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 统计数据 -->
+        <div class="stats">
+            <div class="stats-item">
+                <div class="stats-value" id="totalStudents">0</div>
+                <div class="stats-label">总学生数</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-value" id="avgTotal">0.0</div>
+                <div class="stats-label">平均总分</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-value" id="avgScore">0.0</div>
+                <div class="stats-label">平均分</div>
+            </div>
+        </div>
+
+        <!-- 学生列表 -->
+        <h3>📋 学生成绩列表</h3>
+        <div class="table-responsive">
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>数学</th>
+                        <th>英语</th>
+                        <th>C++</th>
+                        <th>总分</th>
+                        <th>平均分</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="studentList">
+                    <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://unconfirmative-herbert-brutishly.ngrok-free.dev/api/students';
+        
+        // 获取所有学生
+        async function fetchStudents() {
+            try {
+                const response = await fetch(API_BASE);
+                const students = await response.json();
+                renderTable(students);
+                updateStats(students);
+            } catch (error) {
+                showMessage('获取学生数据失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染表格
+        function renderTable(students) {
+            const tbody = document.getElementById('studentList');
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无学生数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            students.forEach(student => {
+                const scores = student.scores || [];
+                const math = scores[0] || 0;
+                const english = scores[1] || 0;
+                const cpp = scores[2] || 0;
+                
+                html += `
+                    <tr>
+                        <td>${student.id}</td>
+                        <td>${student.name}</td>
+                        <td>${math.toFixed(1)}</td>
+                        <td>${english.toFixed(1)}</td>
+                        <td>${cpp.toFixed(1)}</td>
+                        <td>${student.total.toFixed(1)}</td>
+                        <td>${student.average.toFixed(1)}</td>
+                        <td class="action-btns">
+                            <button onclick="editStudent('${student.id}')">✏️ 编辑</button>
+                            <button class="delete-btn" onclick="deleteStudent('${student.id}')">🗑️ 删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // 更新统计信息
+        function updateStats(students) {
+            const total = students.length;
+            let totalSum = 0;
+            let avgSum = 0;
+
+            students.forEach(s => {
+                totalSum += s.total || 0;
+                avgSum += s.average || 0;
+            });
+
+            document.getElementById('totalStudents').textContent = total;
+            document.getElementById('avgTotal').textContent = total > 0 ? (totalSum / total).toFixed(1) : '0.0';
+            document.getElementById('avgScore').textContent = total > 0 ? (avgSum / total).toFixed(1) : '0.0';
+        }
+
+        // 显示消息
+        function showMessage(msg, type = 'error') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = msg;
+            messageEl.className = type;
+            setTimeout(() => {
+                messageEl.textContent = '';
+            }, 3000);
+        }
+
+        // 添加/更新学生
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('id').value.trim();
+            const name = document.getElementById('name').value.trim();
+            const score1 = document.getElementById('score1').value || '0';
+            const score2 = document.getElementById('score2').value || '0';
+            const score3 = document.getElementById('score3').value || '0';
+            
+            if (!id || !name) {
+                showMessage('学号和姓名不能为空', 'error');
+                return;
+            }
+
+            const params = new URLSearchParams({
+                id, name,
+                score1, score2, score3
+            });
+
+            const editId = document.getElementById('studentId').value;
+            const url = editId ? `${API_BASE}/${editId}` : API_BASE;
+            const method = editId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params
+                });
+
+                if (response.ok) {
+                    showMessage(editId ? '更新成功！' : '添加成功！', 'success');
+                    resetForm();
+                    fetchStudents();
+                } else {
+                    const error = await response.json();
+                    showMessage(error.error || '操作失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        });
+
+        // 编辑学生
+        window.editStudent = async (id) => {
+            try {
+                const response = await fetch(`${API_BASE}/${id}`);
+                const student = await response.json();
+                
+                document.getElementById('studentId').value = student.id;
+                document.getElementById('id').value = student.id;
+                document.getElementById('id').disabled = true;
+                document.getElementById('name').value = student.name;
+                
+                const scores = student.scores || [];
+                document.getElementById('score1').value = scores[0] || '';
+                document.getElementById('score2').value = scores[1] || '';
+                document.getElementById('score3').value = scores[2] || '';
+                
+                document.getElementById('formTitle').textContent = '✏️ 编辑学生信息';
+                document.getElementById('submitBtn').textContent = '💾 更新学生';
+                document.getElementById('cancelEditBtn').classList.remove('hidden');
+            } catch (error) {
+                showMessage('获取学生信息失败', 'error');
+            }
+        };
+
+        // 删除学生
+        window.deleteStudent = async (id) => {
+            if (!confirm('确定要删除该学生吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage('删除成功！', 'success');
+                    fetchStudents();
+                } else {
+                    showMessage('删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误', 'error');
+            }
+        };
+
+        // 取消编辑
+        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+        
+        function resetForm() {
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentId').value = '';
+            document.getElementById('id').disabled = false;
+            document.getElementById('formTitle').textContent = '📝 添加新学生';
+            document.getElementById('submitBtn').textContent = '➕ 添加学生';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        // 初始加载
+        fetchStudents();
+        // 每30秒刷新一次
+        setInterval(fetchStudents, 30000);
+    </script>
+</body>
+</html>
